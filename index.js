@@ -2,19 +2,47 @@ const PAGE_SIZE = 10
 let currentPage = 1;
 let pokemons = []
 
-
 const updatePaginationDiv = (currentPage, numPages) => {
-  $('#pagination').empty()
+  $('#pagination').empty();
 
-  const startPage = 1;
-  const endPage = numPages;
-  for (let i = startPage; i <= endPage; i++) {
-    $('#pagination').append(`
-    <button class="btn btn-primary page ml-1 numberedButtons" value="${i}">${i}</button>
-    `)
+  const maxShownPages = 5;
+  let startPage = currentPage - 2;
+  let endPage = currentPage + 2;
+
+  if (startPage < 1) {
+    startPage = 1;
+    endPage = Math.min(numPages, startPage + maxShownPages - 1);
   }
 
-}
+  if (endPage > numPages) {
+    endPage = numPages;
+    startPage = Math.max(1, endPage - (maxShownPages - 1));
+  }
+
+  if (startPage > 1) {
+    $('#pagination').append(`
+      <button class="btn btn-primary page ml-1 numberedButtons" value="${currentPage - 1}">Prev</button>
+    `);
+  }
+
+  for (let i = startPage; i <= endPage; i++) {
+    var active = "";
+    if (i == currentPage) {
+      active = "active";
+    }
+    const button = $(`
+      <button class="btn btn-primary page ml-1 numberedButtons ${active}" value="${i}">${i}</button>
+    `);
+    $('#pagination').append(button);
+  }
+
+  if (currentPage < numPages) {
+    $('#pagination').append(`
+      <button class="btn btn-primary page ml-1 numberedButtons" value="${currentPage + 1}">Next</button>
+    `);
+  }
+};
+
 
 const paginate = async (currentPage, PAGE_SIZE, pokemons) => {
   selected_pokemons = pokemons.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
@@ -23,14 +51,14 @@ const paginate = async (currentPage, PAGE_SIZE, pokemons) => {
   selected_pokemons.forEach(async (pokemon) => {
     const res = await axios.get(pokemon.url)
     $('#pokeCards').append(`
-      <div class="pokeCard card" pokeName=${res.data.name}   >
-        <h3>${res.data.name.toUpperCase()}</h3> 
-        <img src="${res.data.sprites.front_default}" alt="${res.data.name}"/>
-        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#pokeModal">
-          More
-        </button>
-        </div>  
-        `)
+    <div class="pokeCard card" pokeName=${res.data.name}  >
+      <h3>${res.data.name.toUpperCase()}</h3> 
+      <img src="${res.data.sprites.front_default}" alt="${res.data.name}"/>
+      <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#pokeModal">
+        More
+      </button>
+      </div>  
+      `)
   })
 }
 
@@ -47,9 +75,7 @@ const setup = async () => {
   const numPages = Math.ceil(pokemons.length / PAGE_SIZE)
   updatePaginationDiv(currentPage, numPages)
 
-
-
-  // pop up modal when clicking on a pokemon card
+    // pop up modal when clicking on a pokemon card
   // add event listener to each pokemon card
   $('body').on('click', '.pokeCard', async function (e) {
     const pokemonName = $(this).attr('pokeName')
@@ -67,15 +93,12 @@ const setup = async () => {
         ${res.data.abilities.map((ability) => `<li>${ability.ability.name}</li>`).join('')}
         </ul>
         </div>
-
         <div>
         <h3>Stats</h3>
         <ul>
         ${res.data.stats.map((stat) => `<li>${stat.stat.name}: ${stat.base_stat}</li>`).join('')}
         </ul>
-
         </div>
-
         </div>
           <h3>Types</h3>
           <ul>
@@ -89,15 +112,15 @@ const setup = async () => {
         `)
   })
 
-  // add event listener to pagination buttons
-  $('body').on('click', ".numberedButtons", async function (e) {
-    currentPage = Number(e.target.value)
-    paginate(currentPage, PAGE_SIZE, pokemons)
-
-    //update pagination buttons
-    updatePaginationDiv(currentPage, numPages)
-  })
-
+    // add event listener to pagination buttons
+    $('body').on('click', ".numberedButtons", async function (e) {
+      currentPage = Number(e.target.value)
+      paginate(currentPage, PAGE_SIZE, pokemons)
+  
+      //update pagination buttons
+      updatePaginationDiv(currentPage, numPages)
+    })
+  
 }
 
 
